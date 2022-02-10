@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Configuration status="debug" name="XMLConfigTest">
+    <Appenders>
+        <Console name="STDOUT">
+            <BunyanLayout appName="discount" />
+        </Console>
+        <RollingFile name="FILE" fileName="/var/log/discount.log"
+                     filePattern="/var/log/cc-indexer/discount-%1.log">
+            <BunyanLayout appName="discount" />
+            <SizeBasedTriggeringPolicy size="50 MB"/>
+            <DefaultRolloverStrategy max="5"/>
+        </RollingFile>
+    </Appenders>
+    <Loggers>
+        <Logger name="io.netty.handler.codec.http" level="warn" additivity="false">
+            <AppenderRef ref="FILE" />
+        </Logger>
+        <Logger name="io.vertx" level="warn" additivity="false">
+            <AppenderRef ref="STDOUT" />
+            <AppenderRef ref="FILE" />
+        </Logger>
+        <Root level="debug">
+            <AppenderRef ref="STDOUT" />
+            <AppenderRef ref="FILE" />
+        </Root>
+    </Loggers>
+</Configuration>

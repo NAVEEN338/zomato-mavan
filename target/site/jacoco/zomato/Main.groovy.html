@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../.resources/report.gif" type="image/gif"/><title>Main.groovy</title><link rel="stylesheet" href="../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../.sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">discount</a> &gt; <a href="index.source.html" class="el_package">zomato</a> &gt; <span class="el_source">Main.groovy</span></div><h1>Main.groovy</h1><pre class="source lang-java linenums">package zomato
+
+import io.vertx.core.Future
+import io.vertx.core.logging.Logger
+import io.vertx.groovy.core.CompositeFuture
+import io.vertx.lang.groovy.GroovyVerticle
+
+/**
+ * An example Main verticle
+ */
+class Main extends GroovyVerticle {
+
+    private Logger LOG
+
+    void start(Future&lt;Void&gt; startFuture) throws Exception {
+
+        // Configure Vert.x to use Slf4j in order to log using BunyanLogger
+<span class="fc" id="L18">        System.setProperty('vertx.logger-delegate-factory-class-name', 'io.vertx.core.logging.SLF4JLogDelegateFactory')</span>
+<span class="nc" id="L19">        LOG = LoggerFactory.getLogger(Main)</span>
+
+        // Configure the HTTP(S) server
+<span class="nc" id="L22">        def httpOptions = [</span>
+            maxWebsocketFrameSize: 1000000,
+            //ssl: true,                                    // Enable SSL/TLS
+            //pemKeyCertOptions:[
+            //    keyPath:&quot;/path/to/your/server-key.pem&quot;,
+            //    certPath:&quot;/path/to/your/server-cert.pem&quot;
+            //]
+            useAlpn: true,           // Allows HTTP/2 protocol with HTTP/1.1 fallback
+            logActivity: true
+        ]
+<span class="nc" id="L32">        def server = vertx.createHttpServer(httpOptions)</span>
+
+        // Define callbacks to handle completion of asynchronous events
+<span class="nc" id="L35">        def httpFuture = Future.future()</span>
+<span class="nc" id="L36">        def pingFuture = Future.future()</span>
+
+<span class="nc" id="L38">        vertx.deployVerticle('groovy:zomato.PingVerticle', pingFuture.completer())</span>
+<span class="nc" id="L39">        server.listen(8080, '0.0.0.0', httpFuture.completer())</span>
+
+        // Once the attempt to start the web server and PingVerticle have completed, handle the asynchronous results
+<span class="nc" id="L42">        CompositeFuture.join(httpFuture, pingFuture).setHandler({ res -&gt;</span>
+<span class="nc bnc" id="L43" title="All 2 branches missed.">            if (res.succeeded()) {      // Both async events completed successfully</span>
+<span class="nc" id="L44">                LOG.debug('Successfully deployed verticles and started web server')</span>
+<span class="nc" id="L45">                startFuture.complete()</span>
+            } else {
+                // One or more of the async events failed
+<span class="nc" id="L48">                startFuture.fail(res.cause())</span>
+            }
+        })
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.6.201602180812</span></div></body></html>
